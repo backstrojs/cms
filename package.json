@@ -16,6 +16,9 @@
 	"bin": {
 		"cms": "./bin/cms.js"
 	},
+	"repository": {
+		"url": "https://github.com/backstrojs/cms"
+	},
 	"exports": {
 		".": "./dist/index.js",
 		"./admin/components/ui/*": "./dist/admin/components/ui/*/index.js",
