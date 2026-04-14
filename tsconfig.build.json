@@ -1,0 +1,25 @@
+{
+	"extends": "../tsconfig.json",
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"dist",
+		"src/**/*.spec.ts",
+		"src/**/*.test.ts",
+		"src/auth/auth-adapter/test/**/*"
+	],
+	"compilerOptions": {
+		"allowArbitraryExtensions": true,
+		"declaration": true,
+		"noCheck": true,
+		"noEmit": false,
+		"outDir": "./dist",
+		"rewriteRelativeImportExtensions": true,
+		"rootDir": "./src",
+		"paths": {
+			"$lib": ["./src/admin"],
+      		"$lib/*": ["./src/admin/*"],
+		}
+	}
+}
