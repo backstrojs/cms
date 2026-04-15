@@ -13,7 +13,7 @@ export type CollectionField = {
 	driver?: string;
 	accept?: string;
 	prefix?: string;
-	default?: string | ((args: { operation: string }) => any);
+	default?: string | boolean | number | ((args: { operation: string }) => any);
 	updatedAt?: true | ((args: { operation: string }) => any);
 	[key: string]: any;
 };
