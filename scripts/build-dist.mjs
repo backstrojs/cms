@@ -11,6 +11,8 @@ const __dirname = path.dirname(__filename);
 const packageDir = path.resolve(__dirname, '..');
 const sourceDir = path.resolve(packageDir, 'src');
 const outputDir = path.resolve(packageDir, 'dist');
+const globalStylesheetInput = path.resolve(sourceDir, 'assets', 'global.css');
+const globalStylesheetOutput = path.resolve(outputDir, 'assets', 'global.css');
 
 rmSync(outputDir, { recursive: true, force: true });
 
@@ -31,6 +33,27 @@ if (buildResult.status !== 0) {
 }
 
 copyNonTypeScriptFiles(sourceDir, outputDir);
+buildGlobalStylesheet();
+
+function buildGlobalStylesheet() {
+	mkdirSync(path.dirname(globalStylesheetOutput), { recursive: true });
+
+	const tailwindCliPackageJson = require.resolve('@tailwindcss/cli/package.json');
+	const tailwindCli = path.resolve(path.dirname(tailwindCliPackageJson), 'dist', 'index.mjs');
+	const buildResult = spawnSync(
+		process.execPath,
+		[tailwindCli, '-i', globalStylesheetInput, '-o', globalStylesheetOutput, '--minify'],
+		{
+			cwd: sourceDir,
+			env: process.env,
+			stdio: 'inherit',
+		}
+	);
+
+	if (buildResult.status !== 0) {
+		process.exit(buildResult.status ?? 1);
+	}
+}
 
 function copyNonTypeScriptFiles(fromDir, toDir) {
 	mkdirSync(toDir, { recursive: true });
