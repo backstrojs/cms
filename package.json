@@ -1,6 +1,6 @@
 {
 	"name": "@backstro/cms",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -20,17 +20,44 @@
 		"url": "https://github.com/backstrojs/cms"
 	},
 	"exports": {
-		".": "./dist/index.js",
-		"./admin/components/ui/*": "./dist/admin/components/ui/*/index.js",
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./admin/components/ui/*": {
+			"types": "./dist/admin/components/ui/*/index.d.ts",
+			"default": "./dist/admin/components/ui/*/index.js"
+		},
 		"./admin/*": "./dist/admin/*",
-		"./auth": "./dist/auth/index.js",
-		"./auth/client": "./dist/auth/client.js",
+		"./auth": {
+			"types": "./dist/auth/index.d.ts",
+			"default": "./dist/auth/index.js"
+		},
+		"./auth/client": {
+			"types": "./dist/auth/client.d.ts",
+			"default": "./dist/auth/client.js"
+		},
 		"./client/global.css": "./dist/assets/global.css",
-		"./sdk": "./dist/admin/sdk.js",
-		"./collections": "./dist/collections.js",
-		"./config": "./dist/config.js",
-		"./email": "./dist/email.js",
-		"./db": "./dist/db/index.js"
+		"./sdk": {
+			"types": "./dist/admin/sdk.d.ts",
+			"default": "./dist/admin/sdk.js"
+		},
+		"./collections": {
+			"types": "./dist/collections.d.ts",
+			"default": "./dist/collections.js"
+		},
+		"./config": {
+			"types": "./dist/config.d.ts",
+			"default": "./dist/config.js"
+		},
+		"./email": {
+			"types": "./dist/email.d.ts",
+			"default": "./dist/email.js"
+		},
+		"./db": {
+			"types": "./dist/db/index.d.ts",
+			"default": "./dist/db/index.js"
+		}
 	},
 	"dependencies": {
 		"@backstro/email": "^0.0.2",
