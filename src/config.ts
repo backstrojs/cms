@@ -28,6 +28,7 @@ const globalConfig = globalThis as GlobalWithBackstroConfig;
 let config: Config | null = globalConfig.__backstro_config ?? null;
 
 const defineConfig = (userConfig: Config) => {
+	process.env.TZ = 'UTC';
 	config = userConfig;
 	globalConfig.__backstro_config = userConfig;
 

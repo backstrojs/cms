@@ -3,7 +3,6 @@ import type { APIContext } from 'astro';
 import db from '.';
 import * as storage from '../storage';
 import { collections } from '../collections';
-import { parse } from '../format';
 
 function getOperationHooks(collection: any, operation: string, when: 'before' | 'after') {
 	if (!collection) return [];
@@ -58,71 +57,72 @@ const cli = db.$use(definePlugin({
 				const field = collection.fields[ fieldName ];
 
 				if (field) {
-					if (field.type === 'relation' && !field.multiple) {
-						const relationFieldName = String(field.field || '');
+					if (field.type === 'relation') {
+						if (!field.multiple) {
+							const relationFieldName = String(field.field || '');
 
-						if (!relationFieldName) {
-							continue;
-						}
-
-						args.data[ relationFieldName ] = args.data[ fieldName ];
-						delete args.data[ fieldName ];
-					} else if (field.type === 'relation' && field.multiple) {
-						const relationCollectionName = String(field.collection || '');
-						const relationFieldName = String(field.field || '');
-						const relationCollection = (collections as any)[relationCollectionName] as any;
-
-						if (!relationCollection || !relationFieldName) {
-							continue;
-						}
-
-						const idField = relationCollection.idField;
-						const relatedField = (Object.values(relationCollection.fields) as any[]).find((f: any) => f.type === 'relation' && f.collection === model && f.field === relationFieldName);
-						const modelClient = (cli as any)[relationCollectionName];
-
-						if (relatedField.onDelete === 'cascade') {
-							await modelClient.deleteMany({
-								where: {
-									[ idField ]: { notIn: args.data[ fieldName ] },
-									[ relationFieldName ]: args.where.id,
-								}
-							})
-						} else if (relatedField.onDelete === 'restrict') {
-							const res = await modelClient.findFirst({
-								select: { [idField]: true },
-								where: {
-									[ idField ]: { notIn: args.data[ fieldName ] },
-									[ relationFieldName ]: args.where.id,
-								},
-							})
-
-							if (res) {
-								throw new Error(`Cannot remove relation to ${field.collection} with id ${res[idField]} because of restrict onDelete policy`);
+							if (!relationFieldName) {
+								continue;
 							}
-						} else {
+
+							args.data[ relationFieldName ] = args.data[ fieldName ], field;
+						} else if (field.multiple && operationName === 'update') {
+							const relationCollectionName = String(field.collection || '');
+							const relationFieldName = String(field.field || '');
+							const relationCollection = (collections as any)[relationCollectionName] as any;
+
+							if (!relationCollection || !relationFieldName) {
+								continue;
+							}
+
+							const idField = relationCollection.idField;
+							const relatedField = (Object.values(relationCollection.fields) as any[]).find((f: any) => f.type === 'relation' && f.collection === model && f.field === relationFieldName);
+							const modelClient = (cli as any)[relationCollectionName];
+
+							if (relatedField.onDelete === 'cascade') {
+								await modelClient.deleteMany({
+									where: {
+										[ idField ]: { notIn: args.data[ fieldName ] },
+										[ relationFieldName ]: args.where.id,
+									}
+								})
+							} else if (relatedField.onDelete === 'restrict') {
+								const res = await modelClient.findFirst({
+									select: { [idField]: true },
+									where: {
+										[ idField ]: { notIn: args.data[ fieldName ] },
+										[ relationFieldName ]: args.where.id,
+									},
+								})
+
+								if (res) {
+									throw new Error(`Cannot remove relation to ${field.collection} with id ${res[idField]} because of restrict onDelete policy`);
+								}
+							} else {
+								await modelClient.updateMany({
+									where: {
+										[ idField ]: { notIn: args.data[ fieldName ] },
+										[ relationFieldName ]: args.where.id,
+									},
+									data: {
+										[ relationFieldName ]: null,
+									}
+								})
+							}
+
 							await modelClient.updateMany({
 								where: {
-									[ idField ]: { notIn: args.data[ fieldName ] },
-									[ relationFieldName ]: args.where.id,
+									[ idField ]: { in: args.data[ fieldName ] },
 								},
 								data: {
-									[ relationFieldName ]: null,
+									[ relationFieldName ]: args.where.id
 								}
-							})
+							});
 						}
-
-						await modelClient.updateMany({
-							where: {
-								[ idField ]: { in: args.data[ fieldName ] },
-							},
-							data: {
-								[ relationFieldName ]: args.where.id
-							}
-						});
 
 						delete args.data[ fieldName ];
 					} else {
-						args.data[ fieldName ] = parse(args.data[ fieldName ], field);
+						args.data[ fieldName ] = args.data[ fieldName ];
 					}
 				}
 

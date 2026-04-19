@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from "svelte";
 	import { slide } from "svelte/transition";
-	import { format, buildField, buildSelect } from '../../../client';
+	import { format, buildField, buildSelect, parse } from '../../../client';
 	import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/table';
 	import { Button } from '../../components/ui/button';
 	import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNextButton, PaginationPrevButton } from "../../components/ui/pagination";
@@ -46,10 +46,10 @@
 
 		return {
 			...acc,
-			[filter.field]: buildField(collection.fields[filter.field], {
-				[condition]: filter.value,
+			[filter.field]: buildField(collection.fields[filter.field], ({ field }) => ({
+				[condition]: parse(filter.value, field),
 				...(['contains', 'not_contains'].includes(condition) ? { mode: 'insensitive' } : {})
-			})
+			}))
 		};
 	}, {}));
 
@@ -189,7 +189,7 @@
 					<div transition:slide {...props} class="p-4 relative mx-4 mb-4 bg-muted rounded-lg rounded-tl-none">
 						{#each filters as filter, i (i)}
 							<Badge variant="outline" class="mr-2 mb-2 cursor-pointer font-normal bg-white" onclick={() => filters = filters.filter((_, index) => index !== i)}>
-								{collection.fields[filter.field].name} <span class="opacity-50">{conditions[filter.condition]}</span> {filter.value}
+								{collection.fields[filter.field]?.name} <span class="opacity-50">{conditions[filter.condition]}</span> {filter.value}
 								<X class="remove w-3 h-3 ml-1" />
 							</Badge>
 						{/each}
@@ -233,7 +233,7 @@
 			<TableHeader class="sticky top-0 bg-background z-1">
 				<TableRow class="border-t hover:bg-transparent">
 					{#each columns as column}
-						<TableHead class="p-4 font-semibold">
+						<TableHead class="p-4 font-semibold" width={collection.fields[column].type === 'boolean' ? '2' : undefined}>
 							<span class="opacity-50">
 								{collection.fields[column].name}
 							</span>
@@ -258,7 +258,7 @@
 									{#if collection.fields[column].cell}
 										<div class="w-10 h-10 bg-black inline-block align-middle rounded overflow-hidden mr-2"><img src={item.url} alt={item.filename} class="size-10 object-cover" /></div> {item.filename}
 									{:else if collection.fields[column].type === 'boolean'}
-										<div class="pr-16">
+										<div class="pr-12">
 											{#if item[column] === true}
 												<CircleCheck class="size-6 fill-green-500 text-white mx-auto" />
 											{:else}

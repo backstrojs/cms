@@ -6,8 +6,10 @@
 	import Header from '../../components/single/header.svelte';
 	import page from '../../state/page.svelte';
 	import { getContext } from 'svelte';
+  import { buildSelect } from '../../../query';
+  import { format, parse } from '../../../format';
 
-	let { form = undefined, actions = undefined } = $props();
+	let { form = undefined, actions = undefined, create = undefined, update = undefined } = $props();
 
 	const collections = getContext('collections');
 	const { navigate, route } = getContext('router');
@@ -30,15 +32,17 @@
 		if (id() !== 'new') {
 			loading = true;
 
+			const select = buildSelect(collection.fields);
+
 			api[modelName]
-				.findUnique({ where: { id: id()! } })
+				.findUnique({ select, where: { id: id()! } })
 				.then((res) => {
 					item = res;
 					loading = false;
 
 					page.breadcrumbs = [
 						{ name: collection.name, href: `#/${collection.slug}` },
-						{ name: String(item[collection.mainField]) },
+						{ name: format(item[collection.mainField], collection.fields[collection.mainField]) },
 					];
 				})
 				.catch((err) => {
@@ -68,7 +72,7 @@
 				if (collection.fields[key]?.multiple) {
 					data[key] = data[key] ? [...data[key], value] : [value];
 				} else {
-					data[key] = value;
+					data[key] = parse(value, collection.fields[key]);
 				}
 			}
 		}
@@ -81,15 +85,15 @@
 
 		try {
 			if (id() === 'new') {
-				const created = await api[modelName].create({ data });
+				const created = await (create ? create(data) : api[modelName].create({ data }));
 				await navigate('/:collection/:id', { params: { collection: collection.slug, id: created.id } });
-				return;
+			} else {
+				await (update ? update(id(), data) : api[modelName].update({
+					where: { id: id() },
+					data,
+				}));
 			}
 
-			await api[modelName].update({
-				where: { id: id() },
-				data,
-			});
 			alert('Saved successfully!');
 		} catch (err) {
 			console.error(err);

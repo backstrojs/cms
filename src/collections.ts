@@ -204,12 +204,12 @@ export const buildCollections = ({
 						}
 					} else {
 						const relationCollectionName = collections[model.name].fields[key].collection || '';
-						const relationCollection = definitions[relationCollectionName];
+						const relationCollection = schema.models[relationCollectionName];
 
 						if (relationCollection) {
 							collections[model.name].fields[key].field =
 								collections[model.name].fields[key].field ||
-								key + upperCaseFirst(getIdField(cloneFields(relationCollection.fields)));
+								key + upperCaseFirst(getIdField(relationCollection.fields));
 						}
 					}
 				}
@@ -287,9 +287,19 @@ export const buildCollections = ({
 		if (!definitions[model.name]) {
 			for (const field of Object.values(collections[model.name].fields)) {
 				if (field.relation && field.array && field.collection && collections[field.collection]) {
-					field.field =
-						collections[field.collection]?.fields[field.relation.opposite]?.field ||
-						field.relation.opposite + upperCaseFirst(getIdField(collections[field.collection].fields));
+					if (field.relation.opposite) {
+						field.field =
+							collections[field.collection].fields[field.relation.opposite]?.field ||
+							field.relation.opposite + upperCaseFirst(getIdField(collections[field.collection].fields));
+					} else if (field.relation.name) {
+						const relatedField = Object.values(collections[field.collection].fields).find(f => {
+							const name = f.name + field.collection;
+
+							return name === field.relation.name
+						})
+
+						field.field = relatedField.field;
+					}
 				}
 			}
 		}

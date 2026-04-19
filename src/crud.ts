@@ -134,8 +134,11 @@ const collectionItemHandlers = {
 			return notFound();
 		}
 
+		const searchParams = new URL(routeContext.url).searchParams;
+		const query = JSON.parse(searchParams.get('q') ?? '{}');
 		const model = resolveModel(routeContext, routeContext.params.collection);
-		const record = await model.findUnique({ where: { id: routeContext.params.id } });
+		const record = await model.findUnique({ ...query, where: { id: routeContext.params.id } });
+
 		if (!record) {
 			return Response.json({ error: 'Not found' }, { status: 404 });
 		}

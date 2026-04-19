@@ -148,7 +148,7 @@ export const createApiClient = <Schema extends ApiSchema = ApiSchema>(options: A
 				if (!id) return null;
 
 				try {
-					return await request<ApiResult<Schema, M, Args>>(`${baseUrl}/${id}`, { method: 'GET' });
+					return await request<ApiResult<Schema, M, Args>>(`${baseUrl}/${id}?${makeFindManyQuery(args)}`, { method: 'GET' });
 				} catch (error) {
 					if (error instanceof ApiRequestError && error.status === 404) {
 						return null;

@@ -45,6 +45,7 @@ type EnumShape = {
 type RelationOpposite = {
 	name: string;
 	sourceModel: string;
+	sourceField: string;
 };
 
 const TYPE_MAP: Record<string, string> = {
@@ -112,7 +113,7 @@ export async function generateSchemaFromConfig(collections: Collection[]): Promi
 					type: targetModel,
 					optional: !field.required,
 					attributes: [
-						`@relation(fields: [${relationIdFieldName}], references: [${relatedIdField}], onDelete: ${upperCaseFirst(field.onDelete || 'setNull')})`,
+						`@relation("${fieldName}${model.name}", fields: [${relationIdFieldName}], references: [${relatedIdField}], onDelete: ${upperCaseFirst(field.onDelete || 'setNull')})`,
 					],
 				});
 
@@ -126,6 +127,7 @@ export async function generateSchemaFromConfig(collections: Collection[]): Promi
 				relationOpposites.get(targetModel)?.push({
 					name: pluralize(lowerCaseFirst(collection.name)),
 					sourceModel: collection.name,
+					sourceField: fieldName,
 				});
 				continue;
 			}
@@ -216,6 +218,7 @@ export async function generateSchemaFromConfig(collections: Collection[]): Promi
 				name: relFieldName || oppositeName,
 				type: opposite.sourceModel,
 				array: true,
+				attributes: [`@relation("${opposite.sourceField}${opposite.sourceModel}")`]
 			});
 		}
 	}
@@ -317,6 +320,7 @@ function renderSchema(enums: EnumShape[], models: ModelShape[]): string {
 
 	for (const model of models) {
 		sections.push(`model ${model.name} {`);
+
 		for (const field of model.fields) {
 			const optionalMark = field.optional ? '?' : '';
 			const arrayMark = field.array ? '[]' : '';

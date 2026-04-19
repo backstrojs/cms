@@ -6,6 +6,7 @@ type FilterNotStartingWith<Set, Needle extends string> = Set extends `${Needle}$
 
 const db = new ZenStackClient(schema, {
 	plugins: [],
+	fixPostgresTimezone: true,
 	...config!.database,
 	log(event) {
 		if (event.level === 'query') {

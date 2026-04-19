@@ -15,6 +15,13 @@
 		timestamp: 'datetime-local',
 	}
 
+	const step = {
+		number: 'any',
+		date: 1,
+		datetime: 1,
+		timestamp: 1,
+	}
+
 	const type = types[field.type as keyof typeof types] || 'text';
 
 	const remove = (val: string) => {
@@ -45,6 +52,6 @@
 		</div>
 		<BaseInput id={field.name} {type} step={1} class="text-sm" readonly={!!field.readonly} onclick={(e) => type.includes('date') && e.target!.showPicker()} />
 	{:else}
-		<BaseInput value={format(value, field)} id={field.name} name={field.name} {type} step={1} class="text-sm" required={!!field.required} readonly={!!field.readonly} onclick={(e) => type.includes('date') && e.target!.showPicker()} />
+		<BaseInput value={format(value, field)} id={field.name} name={field.name} {type} step={step[field.type as keyof typeof step]} class="text-sm" required={!!field.required} readonly={!!field.readonly} onclick={(e) => type.includes('date') && e.target!.showPicker()} />
 	{/if}
 </LabeledField>

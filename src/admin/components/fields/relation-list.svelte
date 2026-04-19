@@ -1,49 +1,51 @@
 <script lang="ts">
-	import { getRelatedField } from '../../../query';
+	import { buildSelect, getRelatedField } from '../../../query';
 	import LabeledField from './labeled-field.svelte';
 	import { api, type ApiModelName } from '../../sdk';
 	import SelectSearch from '../ui/select-search.svelte';
 	import { Badge } from '../ui/badge';
 	import { X } from '@lucide/svelte';
 	import { getContext } from 'svelte';
+	import { format } from '../../../format';
 
 	const { field, item } = $props();
 
 	const collections = getContext('collections');
-	const idField = collections[field.collection].idField;
-	const relatedField = getRelatedField(field);
 
 	let options = $state([]);
 	let value = $state([]);
 	let selected = $derived(value.map(val => options.find(opt => opt.value === val)).filter(Boolean));
 
 	$effect(() => {
-		value = [];
+		if (item) {
+			const idField = collections[field.collection].idField;
+			const relatedField = getRelatedField(field);
+			const select = buildSelect(collections[field.collection].fields, [relatedField, field.field]);
 
-		api[field.collection as ApiModelName].findMany({
-			...(field.readonly ? {
-				where: {
-					[field.field]: item.id
-				}
-			} : {}),
-			select: {
-				[idField]: true,
-				[relatedField]: true,
-				[field.field]: true,
-			},
-			take: 1000,
-		}).then((res) => {
-			options = res.map(row => {
-				if (row[field.field] == item?.id) {
-					value.push(row[idField]);
-				}
+			value = [];
 
-				return ({
-					value: row[idField],
-					text: row[relatedField]
-				});
-			})
-		});
+			api[field.collection as ApiModelName].findMany({
+				...(field.readonly ? {
+					where: {
+						[field.field]: item.id,
+						...(field.where || {})
+					}
+				} : {}),
+				select,
+				take: 1000,
+			}).then((res) => {
+				options = res.map(row => {
+					if (row[field.field] == item?.id) {
+						value.push(row[idField]);
+					}
+
+					return ({
+						value: row[idField],
+						text: format(row[relatedField], collections[field.collection].fields[relatedField])
+					});
+				})
+			});
+		}
 	});
 
 	const remove = (val: string) => {

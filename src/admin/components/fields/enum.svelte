@@ -4,7 +4,7 @@
 
 	const { field, value } = $props();
 
-	const options = field.options.map(opt => ({ value: opt, text: opt }));
+	const options = $derived(field.options.map(opt => ({ value: opt, text: opt })));
 </script>
 
 <LabeledField id={field.name} required={field.required}>

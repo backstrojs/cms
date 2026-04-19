@@ -70,6 +70,7 @@
 		"@codemirror/lang-php": "^6.0.2",
 		"@codemirror/lang-python": "^6.2.1",
 		"@codemirror/lang-sql": "^6.10.0",
+		"@minimajs/disk": "^0.0.3",
 		"@zenstackhq/cli": "^3.5.5",
 		"@zenstackhq/language": "^3.5.5",
 		"@zenstackhq/orm": "^3.5.5",

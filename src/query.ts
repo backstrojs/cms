@@ -23,37 +23,56 @@ export const getRelationField = (field: CollectionField) => {
 export const getRelatedField = (field: CollectionField) => {
 	if (field.type === 'relation') {
 		const collections = getCollections();
-		const collectionName = typeof field.collection === 'string' ? field.collection : '';
 
-		return collections[collectionName].mainField;
+		return collections[field.collection!].mainField;
 	}
 
 	return null;
 }
 
-export const buildField = (field: CollectionField, value: any) => {
-	if ((field.relation && field.array) || (field.type === 'relation' && field.multiple)) {
+export const buildField = (field: CollectionField, value: any, collection?: string) => {
+	if (field.type === 'relation' && field.multiple) {
 		return undefined;
 	}
 
 	if (field.type === 'relation') {
-		const relatedField = getRelatedField(field);
-		return typeof value === 'function' ? value({ relatedField }) : { [relatedField]: value };
+		const relatedField = getRelatedField(field)!;
+		const collections = getCollections();
+
+		return value({ field: collections[field.collection!].fields[relatedField] });
 	} else {
-		return typeof value === 'function' ? value({}) : value;
+		return value({ field });
 	}
 }
 
-export const buildSelect = (fields, columns?: string[]) => {
-	const collections = getCollections();
+function selectField(field) {
+	if (field.type === 'relation' && field.multiple) {
+		return undefined;
+	}
 
+	if (field.type === 'relation') {
+		const collections = getCollections();
+		const relatedField = getRelatedField(field)!;
+
+		return {
+			select: {
+				[relatedField]: selectField(collections[field.collection!].fields[relatedField]),
+				[collections[field.collection!].idField!]: true
+			}
+		}
+	}
+
+	return true;
+}
+
+export const buildSelect = (fields, columns?: string[]) => {
 	return (columns || Object.keys(fields)).reduce((acc, column) => {
-		const field = buildField(fields[column], ({ relatedField }) => relatedField ? { select: {[relatedField]: true, [collections[fields[column].collection].idField]: true } } : true);
+		const field = fields[column] ? selectField(fields[column]) : true;
 
 		if (field !== undefined) {
 			acc[column] = field;
 
-			if (fields[column].type === 'relation') {
+			if (fields[column]?.type === 'relation') {
 				acc[fields[column].field] = true;
 			}
 		}

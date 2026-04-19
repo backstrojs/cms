@@ -6,5 +6,5 @@
 </script>
 
 <LabeledField id={field.name} required={field.required} class="flex-row! items-center">
-	<Switch id={field.name} checked={value} />
+	<Switch id={field.name} checked={!!value} name={field.name} />
 </LabeledField>

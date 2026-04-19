@@ -26,9 +26,21 @@
 			});
 
 	};
+
+	const create = async (data) => {
+		const { data: user } = await authClient.admin.createUser({
+			email: data.email,
+			password: crypto.randomUUID(),
+			name: data.name,
+			role: data.role,
+			data
+		});
+
+		return user;
+	};
 </script>
 
-<Single>
+<Single {create}>
 	{#snippet actions({ item })}
 		{#if item}
 			<Dialog bind:open>
