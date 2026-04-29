@@ -17,7 +17,7 @@ const commands = {
 	generate: {
 		description: 'Run Better Auth, Backstro, and ZenStack code generation.',
 		run(commandArgs) {
-			runWorkspaceBinary('better-auth', '@better-auth/cli', ['generate']);
+			runWorkspaceBinary('better-auth', '@better-auth/cli', ['generate', '--config', 'src/backstro/auth.ts']);
 			runProcess(process.execPath, [tsxCli, generateScript, ...commandArgs], 'Backstro schema generation');
 			runWorkspaceBinary('zen', '@zenstackhq/cli', ['generate']);
 		},

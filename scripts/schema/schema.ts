@@ -25,9 +25,9 @@ const __dirname = path.dirname(__filename);
 
 function resolveDefinitionsDir(): string {
 	const candidateDirs = [
-		path.resolve(process.cwd(), 'src/collections/definitions'),
-		path.resolve(process.cwd(), 'collections/definitions'),
-		path.resolve(__dirname, '../../collections/definitions'),
+		path.resolve(process.cwd(), 'src/backstro/collections/definitions'),
+		path.resolve(process.cwd(), 'backstro/collections/definitions'),
+		path.resolve(__dirname, '../../backstro/collections/definitions'),
 	];
 
 	for (const candidateDir of candidateDirs) {

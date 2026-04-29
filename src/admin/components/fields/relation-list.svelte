@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { buildSelect, getRelatedField } from '../../../query';
 	import LabeledField from './labeled-field.svelte';
-	import { api, type ApiModelName } from '../../sdk';
+	import { api, type ApiModelName } from '@backstro/sdk';
 	import SelectSearch from '../ui/select-search.svelte';
 	import { Badge } from '../ui/badge';
 	import { X } from '@lucide/svelte';
@@ -21,6 +21,7 @@
 			const idField = collections[field.collection].idField;
 			const relatedField = getRelatedField(field);
 			const select = buildSelect(collections[field.collection].fields, [relatedField, field.field]);
+			const where = typeof field.where === 'function' ? field.where(item) : field.where;
 
 			value = [];
 
@@ -28,7 +29,7 @@
 				...(field.readonly ? {
 					where: {
 						[field.field]: item.id,
-						...(field.where || {})
+						...(where || {})
 					}
 				} : {}),
 				select,

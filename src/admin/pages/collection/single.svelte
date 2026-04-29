@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LoaderCircle } from '@lucide/svelte';
-	import { api, type ApiModelName } from '../../sdk';
+	import { api, type ApiModelName } from '@backstro/sdk';
 	import FieldInput from '../../components/fields/index.svelte';
 	import Actions from '../../components/single/actions.svelte';
 	import Header from '../../components/single/header.svelte';
@@ -78,7 +78,7 @@
 		}
 
 		for (const field of Object.values(collection.fields)) {
-			if (!field.readonly && field.multiple && !data[field.name]) {
+			if (!field.readonly && !field.hidden && field.multiple && !data[field.name]) {
 				data[field.name] = [];
 			}
 		}

@@ -3,7 +3,7 @@
 	import LabeledField from './labeled-field.svelte';
 	import { Button } from "../ui/button";
 	import { X } from "@lucide/svelte";
-	import { api } from "../../sdk";
+	import { api } from "@backstro/sdk";
 
 	const { field, value } = $props();
 	let uploading = $state(false);

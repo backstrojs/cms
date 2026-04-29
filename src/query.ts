@@ -1,20 +1,6 @@
 import { getCollections, type CollectionField } from './collections';
-import type { DbClient, Models } from './db';
-import { upperCaseFirst } from '@zenstackhq/common-helpers';
 
 type Fields = Record<string, CollectionField>;
-
-export const getModel = (slug: string, db: DbClient) => {
-	const collections = getCollections();
-	const modelName = upperCaseFirst(slug);
-	const collection = collections![modelName] || Object.values(collections!).find(c => c.slug === slug);
-
-	if (!collection) {
-		return null;
-	}
-
-	return db[collection.name as Models];
-};
 
 export const getRelationField = (field: CollectionField) => {
 	return field.relation?.fields[0] || (field.type === 'relation' ? field.field : null);

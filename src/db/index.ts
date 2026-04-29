@@ -1,23 +1,16 @@
 import { ZenStackClient } from '@zenstackhq/orm';
-import { schema } from 'zenstack/generated/schema';
-import { config } from '../config'
+import { type SchemaDef } from '@zenstackhq/orm/schema';
 
-type FilterNotStartingWith<Set, Needle extends string> = Set extends `${Needle}${infer _X}` ? never : Set;
-
-const db = new ZenStackClient(schema, {
+export default (config, schema: SchemaDef) => new ZenStackClient(schema, {
 	plugins: [],
-	fixPostgresTimezone: true,
 	...config!.database,
 	log(event) {
 		if (event.level === 'query') {
-			// console.log(event.query.sql, event.queryDurationMillis);
+			// console.log(event.query.sql, event.queryDurationMillis, event.query.parameters);
 		} else if (event.level === 'error') {
 			console.error(event);
 		}
 	}
 })
 
-export type DbClient = typeof db;
-export type Models = FilterNotStartingWith<keyof DbClient, '$'>;
-
-export default db;
+export type DbClient = typeof ZenStackClient;

@@ -28,7 +28,7 @@
 	};
 
 	const create = async (data) => {
-		const { data: user } = await authClient.admin.createUser({
+		const res = await authClient.admin.createUser({
 			email: data.email,
 			password: crypto.randomUUID(),
 			name: data.name,
@@ -36,7 +36,7 @@
 			data
 		});
 
-		return user;
+		return res.data.user;
 	};
 </script>
 

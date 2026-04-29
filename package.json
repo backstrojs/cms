@@ -1,6 +1,6 @@
 {
 	"name": "@backstro/cms",
-	"version": "0.0.8",
+	"version": "0.1.0",
 	"type": "module",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -57,10 +57,15 @@
 		"./db": {
 			"types": "./dist/db/index.d.ts",
 			"default": "./dist/db/index.js"
+		},
+		"./storage": {
+			"types": "./dist/storage/index.d.ts",
+			"default": "./dist/storage/index.js"
 		}
 	},
 	"dependencies": {
 		"@backstro/email": "^0.0.2",
+		"@backstro/sdk": "^0.1.4",
 		"@better-auth/cli": "^1.4.21",
 		"@codemirror/lang-css": "^6.3.1",
 		"@codemirror/lang-html": "^6.4.11",
@@ -84,9 +89,9 @@
 		"sortablejs": "^1.15.7",
 		"sv-router": "^0.14.1",
 		"svelte-codemirror-editor": "^2.1.0",
-		"tailwindcss": "^4.2.2",
 		"tailwind-merge": "^3.5.0",
 		"tailwind-variants": "^3.2.2",
+		"tailwindcss": "^4.2.2",
 		"tsx": "^4.20.6",
 		"tw-animate-css": "^1.4.0"
 	},

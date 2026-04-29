@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Cloud, LoaderCircle, Trash } from "@lucide/svelte";
-	import { api, type ApiModelName } from '../../sdk';
+	import { api, type ApiModelName } from '@backstro/sdk';
 	import { Button } from "../ui/button";
 	import { format } from '../../../format';
 	import { getContext } from "svelte";

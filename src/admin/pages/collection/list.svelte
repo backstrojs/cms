@@ -8,7 +8,7 @@
 	import { InputGroup, InputGroupAddon, InputGroupInput } from '../../components/ui/input-group';
 	import { Collapsible, CollapsibleContent } from '../../components/ui/collapsible';
 	import { Badge } from '../../components/ui/badge';
-	import { api, type ApiModelName, type ApiResult } from '../../sdk';
+	import { api, type ApiModelName, type ApiResult } from '@backstro/sdk';
 	import { ChevronDown, ChevronUp, CircleCheck, CircleX, ListFilter, LoaderCircle, Plus, Search, Settings, X } from '@lucide/svelte';
 	import { reorder, useSortable } from "../../hooks/useSortable.svelte";
 	import AddFilter from "../../components/list/add-filter.svelte";

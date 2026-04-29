@@ -1,6 +1,8 @@
 import type { APIContext } from 'astro';
-import { upload } from './storage';
-import { getModel } from './query';
+import createStorage from './storage';
+import { upperCaseFirst } from '@zenstackhq/common-helpers';
+import { Collection } from './collections';
+import { Config } from './config';
 
 type CmsCrudContext<TContext extends APIContext = APIContext, TDb = unknown> = TContext & {
 	locals: TContext['locals'] & {
@@ -11,15 +13,6 @@ type CmsCrudContext<TContext extends APIContext = APIContext, TDb = unknown> = T
 		collection: string;
 		id?: string;
 	};
-};
-
-type CmsModel = {
-	findMany: (args?: any) => Promise<any>;
-	create: (args: any) => Promise<any>;
-	findUnique: (args: any) => Promise<any>;
-	update: (args: any) => Promise<any>;
-	delete: (args: any) => Promise<any>;
-	count: (args?: any) => Promise<any>;
 };
 
 type CmsRouteMatch = {
@@ -80,21 +73,21 @@ function withRouteParams<TContext extends APIContext, TDb>(
 
 function resolveModel<TContext extends APIContext, TDb>(
 	context: CmsCrudContext<TContext, TDb>,
-	collection: string,
+	collections: Record<string, Collection>
 ) {
-	const model = getModel(collection, context.locals.db as any) as CmsModel | null;
+	const slug = context.params.collection;
+	const modelName = upperCaseFirst(slug);
+	const collection = collections[modelName] || Object.values(collections).find(c => c.slug === slug);
 
-	if (!model) {
+	if (!collection) {
 		throw new Error(`Model not found for collection: ${collection}`);
 	}
 
-	return model;
+	return context.locals.db![collection.name as keyof typeof context.locals.db];
 }
 
 const collectionIndexHandlers = {
-	GET: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
-		const model = resolveModel(routeContext, routeContext.params.collection);
-
+	GET: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any) => {
 		const searchParams = new URL(routeContext.url).searchParams;
 		const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
 		const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '20', 10)));
@@ -104,8 +97,7 @@ const collectionIndexHandlers = {
 
 		return Response.json(data);
 	},
-	POST: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
-		const model = resolveModel(routeContext, routeContext.params.collection);
+	POST: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any, storage: any) => {
 		let data;
 
 		if (routeContext.request.headers.get('content-type')?.startsWith('multipart/form-data')) {
@@ -117,7 +109,7 @@ const collectionIndexHandlers = {
 				throw new Error('Missing file upload');
 			}
 
-			data = await upload(typeof driver === 'string' ? driver : 'local', file);
+			data = await storage.upload(typeof driver === 'string' ? driver : 'local', file);
 		} else {
 			data = await routeContext.request.json();
 		}
@@ -129,14 +121,13 @@ const collectionIndexHandlers = {
 };
 
 const collectionItemHandlers = {
-	GET: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
+	GET: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any) => {
 		if (!routeContext.params.id) {
 			return notFound();
 		}
 
 		const searchParams = new URL(routeContext.url).searchParams;
 		const query = JSON.parse(searchParams.get('q') ?? '{}');
-		const model = resolveModel(routeContext, routeContext.params.collection);
 		const record = await model.findUnique({ ...query, where: { id: routeContext.params.id } });
 
 		if (!record) {
@@ -145,29 +136,26 @@ const collectionItemHandlers = {
 
 		return Response.json(record);
 	},
-	PUT: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
+	PUT: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any) => {
 		if (!routeContext.params.id) {
 			return notFound();
 		}
 
-		const model = resolveModel(routeContext, routeContext.params.collection);
 		const data = await routeContext.request.json();
 		const updated = await model.update({ where: { id: routeContext.params.id }, data });
 		return Response.json(updated);
 	},
-	DELETE: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
+	DELETE: async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any) => {
 		if (!routeContext.params.id) {
 			return notFound();
 		}
 
-		const model = resolveModel(routeContext, routeContext.params.collection);
 		await model.delete({ where: { id: routeContext.params.id } });
 		return new Response(null, { status: 204 });
 	},
 };
 
-const collectionCountHandler = async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>) => {
-	const model = resolveModel(routeContext, routeContext.params.collection);
+const collectionCountHandler = async <TContext extends APIContext = APIContext, TDb = unknown>(routeContext: CmsCrudContext<TContext, TDb>, model: any) => {
 	const searchParams = new URL(routeContext.url).searchParams;
 	const query = JSON.parse(searchParams.get('q') ?? '{}');
 
@@ -177,10 +165,12 @@ const collectionCountHandler = async <TContext extends APIContext = APIContext, 
 }
 
 export async function restApiHandler<TContext extends APIContext = APIContext, TDb = unknown>(
-	apiPath: string = '/api/',
+	config: Config,
 	context: TContext,
+	collections: Record<string, Collection>
 ) {
-	const routeMatch = resolveRouteMatch(context.url.pathname, apiPath);
+	const routeMatch = resolveRouteMatch(context.url.pathname, config.apiPath || '/api/');
+	const storage = createStorage(config);
 
 	if (!routeMatch) {
 		return notFound();
@@ -188,18 +178,19 @@ export async function restApiHandler<TContext extends APIContext = APIContext, T
 
 	const routeContext = withRouteParams<TContext, TDb>(context, routeMatch);
 	const method = context.request.method.toUpperCase();
+	const model = resolveModel(routeContext, collections);
 
 	try {
 		if (method === 'GET' && routeMatch.actionOrId === 'count') {
-			return collectionCountHandler<TContext, TDb>(routeContext);
+			return collectionCountHandler<TContext, TDb>(routeContext, model);
 		}
 
 		if (!routeMatch.actionOrId && collectionIndexHandlers[method as keyof typeof collectionIndexHandlers]) {
-			return collectionIndexHandlers[method as keyof typeof collectionIndexHandlers]<TContext, TDb>(routeContext);
+			return collectionIndexHandlers[method as keyof typeof collectionIndexHandlers]<TContext, TDb>(routeContext, model, storage);
 		}
 
 		if (routeMatch.id && collectionItemHandlers[method as keyof typeof collectionItemHandlers]) {
-			return collectionItemHandlers[method as keyof typeof collectionItemHandlers]<TContext, TDb>(routeContext);
+			return collectionItemHandlers[method as keyof typeof collectionItemHandlers]<TContext, TDb>(routeContext, model);
 		}
 	} catch (error) {
 		console.error(error);

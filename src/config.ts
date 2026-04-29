@@ -1,10 +1,20 @@
 import type { DiskDriver } from "@minimajs/disk";
+import { type BetterAuthOptions } from "better-auth";
 import type { Dialect } from "kysely";
 import type { Transporter } from "nodemailer";
 import type { Config as TailwindConfig } from 'tailwindcss';
 
-type Config = {
-	auth: {
+export type Config = {
+	apiPath?: string;
+	cors?: boolean | {
+		origin: string | string[] | RegExp | ((origin: string) => boolean);
+		methods?: string | string[];
+		allowedHeaders?: string | string[];
+		exposedHeaders?: string | string[];
+		credentials?: boolean;
+		maxAge?: number;
+	},
+	auth: Partial<BetterAuthOptions> & {
 		adminRole: string;
 		allowSignup: boolean;
 	},
