@@ -3,9 +3,9 @@ import { admin } from "better-auth/plugins"
 import { betterAuthAdapter } from "./auth-adapter";
 
 export const defineAuth = (db, config: Partial<BetterAuthOptions>) => betterAuth({
-	baseURL: import.meta.env.AUTH_URL!,
+	baseURL: process.env.AUTH_URL!,
 	basePath: '/auth',
-	secret: import.meta.env.AUTH_SECRET!,
+	secret: process.env.AUTH_SECRET!,
 	...config,
 	database: betterAuthAdapter(db),
 	emailAndPassword: {
